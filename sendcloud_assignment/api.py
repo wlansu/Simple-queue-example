@@ -6,7 +6,7 @@ import datetime
 
 from pydantic import AnyHttpUrl, Field, UUID4
 
-from sendcloud_assignment.views import get_scheduled_task_by_id
+from sendcloud_assignment.views import celery_manager
 from sendcloud_assignment.tasks import set_timer_task
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def set_timer(request, data: SetTimerSchema):
 @api.get("/timer/{timer_uuid}/", response=GetTimerResponse)
 def get_timer(request, timer_uuid: str):
     """Get the time left for the timer with the specified id."""
-    result = get_scheduled_task_by_id(UUID4(timer_uuid))
+    result = celery_manager.get_scheduled_task_by_id(UUID4(timer_uuid))
     if not result:
         raise Http404
 
