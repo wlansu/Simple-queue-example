@@ -13,10 +13,6 @@ ENV PYTHONUNBUFFERED=1
 # Tell Poetry where to place its cache and virtual environment
 ENV POETRY_CACHE_DIR=/opt/.cache
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    jq
-
 RUN pip install "poetry==${POETRY_VERSION}"
 
 WORKDIR /usr/src/app
