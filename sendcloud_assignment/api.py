@@ -1,6 +1,7 @@
 from django.http import Http404
 from ninja import NinjaAPI, Schema
 
+import logging
 import datetime
 
 from pydantic import AnyHttpUrl, Field, UUID4
