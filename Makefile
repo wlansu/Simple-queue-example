@@ -1,4 +1,5 @@
 # Makefile
+OPEN := "open"
 
 # Build the Docker containers
 build:
@@ -27,4 +28,4 @@ create_timer:
 		-d '{"hours": $(HOURS), "minutes": $(MINUTES), "seconds": $(SECONDS), "url": "$(URL)"}'
 
 retrieve_timer:
-	open http://0.0.0.0:8000/timer/$(TIMER_UUID)
+	"$(OPEN)" http://0.0.0.0:8000/timer/$(TIMER_UUID)

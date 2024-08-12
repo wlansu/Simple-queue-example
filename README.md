@@ -37,7 +37,7 @@ make create_timer HOURS=1 MINUTES=1 SECONDS=1 URL="https://example.com"
 # Get a timer
 make retrieve_timer TIMER_UUID="55543f48-88fd-4c2b-864f-df306ac5baee"
 ```
-> **_NOTE:_**  This uses a browser to make the request, curl didn't wait for the response.
+> **_NOTE:_**  This uses a browser to make the request, curl didn't wait for the response. If you're on Linux you will need to replace the `open` command with `xdg-open` or `gnome-open` depending on your desktop environment.
 
 
 ## 6. Run the following command to stop the docker container
