@@ -1,4 +1,12 @@
 # Instructions to run the code
+For assumptions made see [assumptions.md](docs/assumptions.md).
+
+## Prerequisites
+You will need the following installed on your machine:
+- Docker
+- Make
+- Curl
+- A browser
 
 ## 1. Clone the repository
 
