@@ -1,10 +1,14 @@
+from django.http import Http404
 from ninja import NinjaAPI, Schema
 
 import datetime
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, UUID4
 
 from sendcloud_assignment.views import get_scheduled_task_by_id
+from sendcloud_assignment.tasks import set_timer_task
+
+logger = logging.getLogger(__name__)
 
 api = NinjaAPI(version="0.1.0")
 
@@ -21,32 +25,31 @@ class GetTimerResponse(Schema):
 
 
 class SetTimerResponse(GetTimerResponse):
-    timer_uuid: str
+    timer_uuid: UUID4
 
 
 @api.post("/timer", response=SetTimerResponse)
 def set_timer(request, data: SetTimerSchema):
     """Create a Celery task that will call a url after the specified time."""
-    from sendcloud_assignment.tasks import set_timer_task
-
-    # Convert hours, minutes and seconds to seconds and combine them
-    hours = data.hours * 3600
-    minutes = data.minutes * 60
-    seconds = hours + minutes + data.seconds
-    url = str(data.url)
-    result = set_timer_task.apply_async((url,), countdown=seconds)  # type: ignore
-    return {"timer_uuid": result.id, "time_left": seconds}
+    seconds = datetime.timedelta(
+        hours=data.hours, minutes=data.minutes, seconds=data.seconds
+    ).total_seconds()
+    logger.debug(f"Attempting to send task to Celery. {seconds=}, {data.url=}")
+    result = set_timer_task.apply_async((str(data.url),), countdown=seconds)  # type: ignore
+    logger.info(f"Sent task to Celery. {seconds=}, {data.url=}, {result.id=}")
+    return SetTimerResponse(timer_uuid=UUID4(result.id), time_left=seconds)
 
 
 @api.get("/timer/{timer_uuid}/", response=GetTimerResponse)
 def get_timer(request, timer_uuid: str):
     """Get the time left for the timer with the specified id."""
-    result = get_scheduled_task_by_id(timer_uuid)
-    time_left = 0
-    if result:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        eta = datetime.datetime.fromisoformat(result["eta"]).astimezone(
-            datetime.timezone.utc
-        )
-        time_left = (eta - now).total_seconds()  # type: ignore
-    return {"time_left": time_left}
+    result = get_scheduled_task_by_id(UUID4(timer_uuid))
+    if not result:
+        raise Http404
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    time_left = (result.eta - now).total_seconds()  # type: ignore
+    # It's possible that the task has already been executed, in which case the time left will be negative.
+    if time_left < 0:
+        time_left = 0
+    return GetTimerResponse(time_left=time_left)

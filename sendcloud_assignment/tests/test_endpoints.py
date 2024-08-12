@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import pytest
+import uuid
 
 if TYPE_CHECKING:
     from django.test import Client
@@ -55,9 +56,9 @@ def test_set_timer_wrong_input(data: dict[str, int | str], client: "Client") -> 
             {"hours": 4, "minutes": 0, "seconds": 1, "url": "https://google.com"},
             4 * 3600 + 1,
         ),
-        ({"hours": 0, "minutes": 0, "seconds": 1, "url": "https://google.com"}, 1),
+        ({"hours": 0, "minutes": 0, "seconds": 10, "url": "https://google.com"}, 10),
         ({"hours": 0, "minutes": 1, "seconds": 0, "url": "https://google.com"}, 60),
-        ({"hours": 0, "minutes": 0, "seconds": 0, "url": "https://google.com"}, 0),
+        ({"hours": 0, "minutes": 0, "seconds": 5, "url": "https://google.com"}, 5),
     ],
 )
 def test_get_timer(data: dict[str, int | str], expected: int, client: "Client") -> None:
@@ -67,3 +68,8 @@ def test_get_timer(data: dict[str, int | str], expected: int, client: "Client") 
     assert response.status_code == 200
     # We can't guarantee the exact time left due to the time it takes to run the test.
     assert response.json()["time_left"] <= expected
+
+
+def test_get_timer_does_not_exist(client: "Client") -> None:
+    response = client.get(f"/timer/{uuid.uuid4()}", follow=True)
+    assert response.status_code == 404
