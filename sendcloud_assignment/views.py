@@ -39,4 +39,3 @@ def get_scheduled_task_by_id(timer_uuid: UUID4) -> TaskResult | None:
         if task_result.id == timer_uuid:
             found = task_result
     return found
-
