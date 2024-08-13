@@ -1,6 +1,5 @@
 import httpx
 from celery.app import shared_task
-from pydantic import AnyHttpUrl
 
 import logging
 
@@ -19,9 +18,10 @@ logger = logging.getLogger(__name__)
 def set_timer_task(url: str) -> None:
     """Call the url.
 
-    Retry in case it raises a predetermined Exception. On any other exception we don't retry.
+    Retry in case it raises one of the predetermined Exceptions. On any other exception we don't retry as we don't
+        know what the problem was.
     """
     response = httpx.get(url, timeout=1)
-    # Log the result regardless of success
-    logger.info(f"Succesfully completed task: {response=}")
+    # Log the result regardless of the response status as we want to know if the task was executed
+    logger.info(f"Successfully completed task: {response=}")
     response.raise_for_status()

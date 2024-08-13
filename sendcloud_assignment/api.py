@@ -30,7 +30,7 @@ class SetTimerResponse(GetTimerResponse):
 
 
 @api.post("/timer", response=SetTimerResponse)
-def set_timer(request, data: SetTimerSchema):
+def set_timer(request, data: SetTimerSchema) -> SetTimerResponse:
     """Create a Celery task that will call a url after the specified time."""
     seconds = datetime.timedelta(
         hours=data.hours, minutes=data.minutes, seconds=data.seconds
@@ -42,14 +42,16 @@ def set_timer(request, data: SetTimerSchema):
 
 
 @api.get("/timer/{timer_uuid}/", response=GetTimerResponse)
-def get_timer(request, timer_uuid: str):
+def get_timer(request, timer_uuid: str) -> GetTimerResponse:
     """Get the time left for the timer with the specified id."""
     result = celery_manager.get_scheduled_task_by_id(UUID4(timer_uuid))
     if not result:
         raise Http404
 
     now = datetime.datetime.now(datetime.timezone.utc)
+    # There is no need to convert the result.eta to utc as the datetime module accounts for the timezone differences.
     time_left = (result.eta - now).total_seconds()  # type: ignore
+
     # It's possible that the task has already been executed, in which case the time left will be negative.
     if time_left < 0:
         time_left = 0
